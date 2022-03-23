@@ -25,7 +25,6 @@ bq = Queen(1, BLACK_QUEEN_IMAGE, 9)
 bk = King(1, BLACK_KING_IMAGE, 0)
 
 board = Board()
-testing_board = Board()
 
 game = Game()
 
@@ -64,11 +63,10 @@ def main():
             if event.type == pygame.MOUSEBUTTONUP:
                 x, y = pygame.mouse.get_pos()
                 x2, y2 = x // 90, y // 90                                                                    
-                game.make_move_if_legal(testing_board.board, board.board, y1, x1, y2, x2)
-                print(board.board)
+                game.make_move(board.board, y1, x1, y2, x2)
 
-        draw_board()
         draw_pieces(board.board)
+        draw_board()
     pygame.quit()
         
 
