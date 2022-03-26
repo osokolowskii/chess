@@ -27,20 +27,10 @@ class Piece:
         self.value = value
 
     def is_pinned(self, board, row, col):
-        pins = {
-            "top_left" : self.is_pinned_top_left(board, row, col),
-            "left" : self.is_pinned_left(board, row, col),
-            "bottom left" : self.is_pinned_bottom_left(board, row, col),
-            "bottom" : self.is_pinned_bottom(board, row, col),
-            "bottom right" : self.is_pinned_bottom_right(board, row, col),
-            "right" : self.is_pinned_right(board, row, col),
-            "top right" : self.is_pinned_top_right(board, row, col),
-            "top" : self.is_pinned_top(board, row, col)
-        }
-        if True in pins:
-            return True
-        else:
-            return False
+        return True in (self.is_pinned_top_left(board, row, col), self.is_pinned_left(board, row, col),
+            self.is_pinned_bottom_left(board, row, col), self.is_pinned_bottom(board, row, col),
+            self.is_pinned_bottom_right(board, row, col), self.is_pinned_right(board, row, col),
+            self.is_pinned_top_right(board, row, col), self.is_pinned_top(board, row, col))
 
     def list_of_pins(self, board, row, col):
         pins = {
@@ -241,6 +231,8 @@ class Pawn(Piece):
                     possible_moves.append([row - 1, col - 1])
             if col < 7 and board[row - 1][col + 1] != 0 and board[row - 1][col + 1].team != self.team:
                     possible_moves.append([row - 1, col + 1])
+            if col > 0 and board[row - 1][col - 1] == 0 and row == 3 and type(board[row][col - 1]) == Pawn:
+                possible_moves.append([row - 1, col - 1])
             if col < 7 and board[row - 1][col + 1] == 0 and row == 3 and type(board[row][col + 1]) == Pawn:
                     possible_moves.append([row - 1, col + 1])
 
@@ -318,8 +310,6 @@ class Bishop(Piece):
  
 class Rook(Piece):
     moved = False
-    def has_moved(self):
-        return self.moved
     def move(self):
         self.moved = True
     def possible_moves_list(self, board, row, col):
@@ -456,8 +446,6 @@ class King(Piece):
     moved = False
     def move(self):
         self.moved = True
-    def has_moved(self):
-        return self.moved
     def possible_moves_list(self, board, row, col):
         possible_moves = []
         for i in [-1, 1]:
@@ -468,16 +456,17 @@ class King(Piece):
                 if board[row][col + i] == 0 or board[row][col + i].team != self.team:
                     possible_moves.append([row, col + i])
             for j in [-1, 1]:
-                if row + i in range(0, 8) and col + i in range(0, 8):
-                    if board[row + i][col + i] == 0 or board[row + i][col + i].team != self.team:
+                if row + i in range(0, 8) and col + j in range(0, 8):
+                    if board[row + i][col + j] == 0 or board[row + i][col + j].team != self.team:
                         possible_moves.append([row + i, col + j])
         #castle short
-        if not self.has_moved():
+        if not self.moved:
             squares_are_empty = True
             for i in range(1, 3):
+                if board[row][col + i] != 0:
                     squares_are_empty = False
                     break
-            if squares_are_empty and type(board[row][col + 3]) == Rook and not board[row][col + 3].has_moved():
+            if squares_are_empty and type(board[row][col + 3]) == Rook and not board[row][col + 3].moved:
                 possible_moves.append([row, col + 2])
             #castle long
             squares_are_empty = True
@@ -485,7 +474,7 @@ class King(Piece):
                 if board[row][col - i] != 0:
                     squares_are_empty = False
                     break
-            if squares_are_empty and type(board[row][col - 4]) == Rook and not board[row][col - 4].has_moved():
+            if squares_are_empty and type(board[row][col - 4]) == Rook and not board[row][col - 4].moved:
                 possible_moves.append([row, col - 2])
         return possible_moves
 
@@ -498,10 +487,7 @@ class King(Piece):
         return checks > 1
 
     def is_in_single_check(self, board, row, col):
-        check = False
         for i in range(8):
             for j in range(8):
                 if board[i][j] != 0 and board[i][j].team != self.team and [row, col] in board[i][j].possible_moves_list(board, i, j):
-                    check = True
-                    break
-        return (check, i, j)
+                    return True
