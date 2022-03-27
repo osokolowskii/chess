@@ -6,6 +6,8 @@ class Game:
     last_move = [0, 0]
     team_on_move = 0
     opposite_team = 1
+    FENs = []
+    result = None
 
     def square_is_attacked(self, board, team, row, col):
         for i in range(8):
@@ -96,13 +98,13 @@ class Game:
                     indexes_to_remove.append(moves_list.index(move))
                 elif board[king_row][king_col].is_attacked_bottom(board, king_row, king_col) and move[2] < king_row and move[3] == king_col:
                     indexes_to_remove.append(moves_list.index(move))
-                elif board[king_row][king_col].is_attacked_bottom_right(board, king_row, king_col) and move[2] < king_row and move[3] > king_col:
+                elif board[king_row][king_col].is_attacked_bottom_right(board, king_row, king_col) and move[2] < king_row and move[3] < king_col:
                     indexes_to_remove.append(moves_list.index(move))
                 elif board[king_row][king_col].is_attacked_right(board, king_row, king_col) and move[2] == king_row and move[3] < king_col:
                     indexes_to_remove.append(moves_list.index(move))
-                elif board[king_row][king_col].is_attacked_top_right(board, king_row, king_col) and move[2] < king_row and move[3] > king_col:
+                elif board[king_row][king_col].is_attacked_top_right(board, king_row, king_col) and move[2] < king_row and move[3] < king_col:
                     indexes_to_remove.append(moves_list.index(move))
-                elif board[king_row][king_col].is_attacked_top(board, king_row, king_col) and move[2] < king_row and move[3] == king_col:
+                elif board[king_row][king_col].is_attacked_top(board, king_row, king_col) and move[2] > king_row and move[3] == king_col:
                     indexes_to_remove.append(moves_list.index(move))
         return [x for x in moves_list if not moves_list.index(x) in indexes_to_remove]
 
@@ -206,8 +208,71 @@ class Game:
             else:
                 self.team_on_move = 0
                 self.opposite_team = 1
-        self.last_move = [end_row, end_col]
-        if type(board[end_row][end_col]) in (Rook, King) and not board[end_row][end_col].moved:
-            board[end_row][end_col].move()
-        if type(board[end_row][end_col]) == Pawn and end_row in (0, 7):
-            self.promote(board, end_row, end_col)
+            self.last_move = [end_row, end_col]
+            if type(board[end_row][end_col]) in (Rook, King) and not board[end_row][end_col].moved:
+                board[end_row][end_col].move()
+            if type(board[end_row][end_col]) == Pawn and end_row in (0, 7):
+                self.promote(board, end_row, end_col)
+            if len(self.list_of_legal_moves(board)) == 0:
+                king_row = self.king_positions[self.team_on_move][0]
+                king_col = self.king_positions[self.team_on_move][1]
+                if board[king_row][king_col].is_attacked(board, king_row, king_col):
+                    self.result = self.opposite_team
+                else:
+                    self.result = 'draw stalemate'
+            self.FENs.append(self.generate_fen(board))
+            self.check_repetition_rule()
+
+    def generate_fen(self, board):
+        fen_code = []
+        empty_squares = 0
+        for i in range(8):
+            for j in range(8):
+                letter = None
+                if type(board[i][j]) == int:
+                    empty_squares += 1
+                if type(board[i][j]) != int and empty_squares > 0:
+                    fen_code.append(str(empty_squares))
+                    empty_squares = 0
+                if type(board[i][j]) == Pawn:
+                    letter = 'p'
+                elif type(board[i][j]) == Knight:
+                    letter = 'n'
+                elif type(board[i][j]) == Bishop:
+                    letter = 'b'
+                elif type(board[i][j]) == Rook:
+                    letter = 'r'
+                elif type(board[i][j]) == Queen:
+                    letter = 'q'
+                elif type(board[i][j]) == King:
+                    letter = 'k'
+                if letter != None:
+                    if board[i][j].team == 0:
+                        letter = letter.upper()
+                    fen_code.append(letter)
+                if j == 7:
+                    if empty_squares > 0:
+                        fen_code.append(str(empty_squares))
+                        empty_squares = 0
+                    if i != 7:
+                        fen_code.append('/')
+        fen_code = "".join(fen_code)
+        return fen_code
+
+    def print_result(self):
+        if self.result == 'draw stalemate':
+            print('Game enden in a draw by stalemate.')
+        elif self.result == 'draw repetition':
+            print('Game ended in a draw by repeating positions.')
+        elif self.result == 0:
+            print('White wins by mate')
+        else:
+            print('Black wins by mate.')
+
+    def check_repetition_rule(self):
+        repetitions = 0
+        for fen in self.FENs:
+            if fen == self.FENs[-1]:
+                repetitions += 1
+        if repetitions > 2:
+            self.result = 'draw repetition'

@@ -3,9 +3,12 @@ from constants import *
 from pieces import *
 from board import *
 from game import *
+import time
 
 
 pygame.init()
+
+
 
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption('chess game')
@@ -31,7 +34,7 @@ game = Game()
 pieces_list = [wr, wn, wb, wq, wk, wp, bp, br, bn, bb, bq, bk]
 
 def draw_board():
-    WIN.fill(BROWN)
+    WIN.fill(BROWN, (0, 0, 720, 720))
     for row in range (ROWS):
         for col in range (COLS):
             if row % 2 == 0:
@@ -54,6 +57,10 @@ def main():
     board.set_start_position(pieces_list)
     while run:
         clock.tick(FPS)
+        if game.result != None:
+            game.print_result()
+            time.sleep(3)
+            run = False
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False

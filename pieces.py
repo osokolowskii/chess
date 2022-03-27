@@ -26,6 +26,13 @@ class Piece:
         self.image = image
         self.value = value
 
+
+    def is_attacked(self, board, row, col):
+        return True in (self.is_attacked_top_left(board, row, col), self.is_attacked_left(board, row, col),
+            self.is_attacked_bottom_left(board, row, col), self.is_attacked_bottom(board, row, col),
+            self.is_attacked_bottom_right(board, row, col), self.is_attacked_right(board, row, col),
+            self.is_attacked_top_right(board, row, col), self.is_attacked_top(board, row, col))
+            
     def is_pinned(self, board, row, col):
         return True in (self.is_pinned_top_left(board, row, col), self.is_pinned_left(board, row, col),
             self.is_pinned_bottom_left(board, row, col), self.is_pinned_bottom(board, row, col),
@@ -223,9 +230,9 @@ class Pawn(Piece):
     def possible_moves_list(self, board, row, col):
         possible_moves = []
         if self.team == 0:
-            if board[row - 1][col] == 0 and row > 0:
+            if row > 0 and board[row - 1][col] == 0:
                 possible_moves.append([row -1, col])
-                if board[row - 2][col] == 0 and row == 6:
+                if row == 6 and board[row - 2][col] == 0:
                     possible_moves.append([row - 2, col])
             if col > 0 and board[row - 1][col - 1] != 0 and board[row - 1][col - 1].team != self.team:
                     possible_moves.append([row - 1, col - 1])
@@ -237,9 +244,9 @@ class Pawn(Piece):
                     possible_moves.append([row - 1, col + 1])
 
         if self.team == 1:
-            if board[row + 1][col] == 0 and row < 7:
+            if row < 7 and board[row + 1][col] == 0:
                 possible_moves.append([row + 1, col])
-                if board[row + 2][col] == 0 and row == 1:
+                if row == 1 and board[row + 2][col] == 0:
                     possible_moves.append([row + 2, col])
             if col > 0 and board[row + 1][col - 1] != 0 and board[row + 1][col - 1].team != self.team:
                 possible_moves.append([row + 1, col - 1])
